@@ -1,4 +1,12 @@
 import { useState } from 'react'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Star } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 function AddFutureForm({ onAddCard }) {
   const [isExpanded, setIsExpanded] = useState(false)
@@ -11,24 +19,34 @@ function AddFutureForm({ onAddCard }) {
     health: ''
   })
 
-  // Card race options with their corresponding colors
+  // Card race options
   const raceOptions = [
-    { value: 'Human', borderColor: 'border-blue-500', bgColor: 'bg-blue-50' },
-    { value: 'Elf', borderColor: 'border-green-500', bgColor: 'bg-green-50' },
-    { value: 'Halfblood', borderColor: 'border-purple-500', bgColor: 'bg-purple-50' },
-    { value: 'Goblin', borderColor: 'border-red-500', bgColor: 'bg-red-50' },
-    { value: 'Ogre', borderColor: 'border-yellow-700', bgColor: 'bg-yellow-50' },
-    { value: 'Beast', borderColor: 'border-orange-500', bgColor: 'bg-orange-50' },
-    { value: 'Outsider/Planes', borderColor: 'border-indigo-500', bgColor: 'bg-indigo-50' },
-    { value: 'Angel/Celestial', borderColor: 'border-sky-500', bgColor: 'bg-sky-50' },
-    { value: 'Dragons', borderColor: 'border-amber-500', bgColor: 'bg-amber-50' },
-    { value: 'Demons', borderColor: 'border-red-700', bgColor: 'bg-red-100' },
-    { value: 'Special', borderColor: 'border-pink-500', bgColor: 'bg-pink-50' },
-    { value: 'Skills', borderColor: 'border-gray-500', bgColor: 'bg-gray-50' }
+    'Human',
+    'Elf',
+    'Halfblood',
+    'Goblin',
+    'Ogre',
+    'Beast',
+    'Outsider/Planes',
+    'Angel/Celestial',
+    'Dragons',
+    'Demons',
+    'Undead',
+    'Special',
+    'Skills'
   ]
 
+  // Handle text/number input changes
   const handleChange = (e) => {
     const { name, value } = e.target
+    setFormData({
+      ...formData,
+      [name]: value
+    })
+  }
+
+  // Handle select changes
+  const handleSelectChange = (name, value) => {
     setFormData({
       ...formData,
       [name]: value
@@ -53,138 +71,165 @@ function AddFutureForm({ onAddCard }) {
 
   // Function to render stars based on rarity
   const renderStars = (count) => {
-    const stars = []
-    for (let i = 0; i < count; i++) {
-      stars.push(
-        <svg key={i} className="w-4 h-4 text-yellow-400 inline-block" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-        </svg>
-      )
+    const rarity = parseInt(count)
+    const colors = {
+      1: 'text-gray-400',
+      2: 'text-green-400',
+      3: 'text-blue-400',
+      4: 'text-purple-400',
+      5: 'text-yellow-400',
+      6: 'text-amber-500',
+      7: 'text-red-500'
     }
-    return stars
+
+    return (
+      <div className="flex">
+        {Array.from({ length: rarity }).map((_, i) => (
+          <Star key={i} size={16} className={`${colors[rarity]} fill-current`} />
+        ))}
+      </div>
+    )
   }
 
-  // Get selected race colors
-  const selectedRace = raceOptions.find(race => race.value === formData.cardRace) || raceOptions[0]
-
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-3 max-w-md mx-auto">
-      <h2 className="text-lg font-semibold mb-2">Add Future Card</h2>
+    <Card className="max-w-md mx-auto">
+      <Collapsible
+        open={isExpanded}
+        onOpenChange={setIsExpanded}
+        className="w-full"
+      >
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">Add Future Card</CardTitle>
+          <CardDescription>
+            Add a card you're interested in for the future
+          </CardDescription>
+          <CollapsibleTrigger asChild>
+            {!isExpanded && (
+              <Button className="w-full mt-2">
+                Add New Card
+              </Button>
+            )}
+          </CollapsibleTrigger>
+        </CardHeader>
 
-      {!isExpanded ? (
-        <button
-          onClick={() => setIsExpanded(true)}
-          className="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
-        >
-          Add New Card
-        </button>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-2">
-          <div>
-            <label className="block text-xs font-medium mb-1">Card Name*</label>
-            <input
-              type="text"
-              name="cardName"
-              value={formData.cardName}
-              onChange={handleChange}
-              className="w-full p-1.5 text-sm border rounded"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium mb-1">Card Race</label>
-              <div className="flex items-center">
-                <select
-                  name="cardRace"
-                  value={formData.cardRace}
+        <CollapsibleContent>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="cardName">Card Name*</Label>
+                <Input
+                  id="cardName"
+                  name="cardName"
+                  value={formData.cardName}
                   onChange={handleChange}
-                  className="w-full p-1.5 text-sm border rounded"
-                >
-                  {raceOptions.map(race => (
-                    <option key={race.value} value={race.value}>
-                      {race.value}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Enter card name"
+                  required
+                />
               </div>
-              <div className={`mt-1 h-2 w-full rounded ${selectedRace.bgColor} ${selectedRace.borderColor} border`}></div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-medium mb-1">Rarity (Stars)</label>
-              <div className="flex items-center">
-                <select
-                  name="cardRarity"
-                  value={formData.cardRarity}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cardRace">Card Race</Label>
+                  <Select
+                    value={formData.cardRace}
+                    onValueChange={(value) => handleSelectChange('cardRace', value)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select race" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {raceOptions.map(race => (
+                        <SelectItem key={race} value={race}>
+                          {race}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cardRarity">Rarity</Label>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={formData.cardRarity}
+                      onValueChange={(value) => handleSelectChange('cardRarity', value)}
+                    >
+                      <SelectTrigger className="w-24">
+                        <SelectValue placeholder="Stars" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                          <SelectItem key={num} value={num.toString()}>
+                            {num}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    <div>
+                      {renderStars(formData.cardRarity)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description/Abilities</Label>
+                <Textarea
+                  id="description"
+                  name="description"
+                  value={formData.description}
                   onChange={handleChange}
-                  className="p-1.5 text-sm border rounded mr-2 w-16"
-                >
-                  {[1, 2, 3, 4, 5, 6, 7].map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
-                <div>{renderStars(parseInt(formData.cardRarity))}</div>
+                  placeholder="Card abilities or effects..."
+                  className="h-20 resize-none"
+                />
               </div>
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-xs font-medium mb-1">Description/Abilities</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              className="w-full p-1.5 text-sm border rounded h-16"
-              placeholder="Card abilities or effects..."
-            />
-          </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="attack">Attack</Label>
+                  <Input
+                    id="attack"
+                    name="attack"
+                    type="number"
+                    min="0"
+                    value={formData.attack}
+                    onChange={handleChange}
+                    placeholder="ATK"
+                  />
+                </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-xs font-medium mb-1">Attack</label>
-              <input
-                type="number"
-                name="attack"
-                value={formData.attack}
-                onChange={handleChange}
-                className="w-full p-1.5 text-sm border rounded"
-                min="0"
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label htmlFor="health">Health</Label>
+                  <Input
+                    id="health"
+                    name="health"
+                    type="number"
+                    min="0"
+                    value={formData.health}
+                    onChange={handleChange}
+                    placeholder="HP"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="block text-xs font-medium mb-1">Health</label>
-              <input
-                type="number"
-                name="health"
-                value={formData.health}
-                onChange={handleChange}
-                className="w-full p-1.5 text-sm border rounded"
-                min="0"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setIsExpanded(false)}
-              className="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 rounded text-sm"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white rounded text-sm"
-            >
-              Add Card
-            </button>
-          </div>
-        </form>
-      )}
-    </div>
+              <div className="flex justify-end space-x-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsExpanded(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Add Card
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </CollapsibleContent>
+      </Collapsible>
+    </Card>
   )
 }
 

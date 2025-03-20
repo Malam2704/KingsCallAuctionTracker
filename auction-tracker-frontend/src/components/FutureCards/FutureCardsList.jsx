@@ -3,12 +3,29 @@ import FutureCard from './FutureCard'
 import AddFutureForm from './AddFutureForm'
 import { useAuth } from '../../context/AuthContext'
 import { getUserData, saveFutureCards, saveWatchlist } from '../../services/firebase'
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Checkbox } from "@/components/ui/checkbox"
+import { SortAsc, SortDesc, Calendar, Loader2, Filter } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
 
 function FutureCardsList() {
   const [futureCards, setFutureCards] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const { currentUser } = useAuth()
+  const [sortBy, setSortBy] = useState('dateAdded')
+  const [sortOrder, setSortOrder] = useState('desc')
+  const [filterFavorites, setFilterFavorites] = useState(false)
 
   // Load future cards from Firestore
   useEffect(() => {
@@ -50,6 +67,7 @@ function FutureCardsList() {
     const newCard = {
       id: Date.now().toString(),
       dateAdded: new Date().toISOString(),
+      favorite: false,
       ...cardData
     }
     setFutureCards([...futureCards, newCard])
@@ -58,6 +76,13 @@ function FutureCardsList() {
   // Delete a future card
   const handleDeleteCard = (cardId) => {
     setFutureCards(futureCards.filter(card => card.id !== cardId))
+  }
+
+  // Toggle favorite status
+  const handleToggleFavorite = (cardId) => {
+    setFutureCards(futureCards.map(card =>
+      card.id === cardId ? { ...card, favorite: !card.favorite } : card
+    ))
   }
 
   // Move a card to watchlist
@@ -77,7 +102,8 @@ function FutureCardsList() {
         cardRarity: card.cardRarity,
         description: card.description,
         attack: card.attack,
-        health: card.health
+        health: card.health,
+        favorite: card.favorite
       }
 
       // Add to watchlist and save
@@ -95,36 +121,179 @@ function FutureCardsList() {
     }
   }
 
+  // Sort and filter cards
+  const getSortedCards = () => {
+    // First filter by favorites if needed
+    let filteredCards = filterFavorites
+      ? futureCards.filter(card => card.favorite)
+      : futureCards;
+
+    // Then sort the filtered cards
+    return [...filteredCards].sort((a, b) => {
+      // Handle different sort fields
+      let aValue, bValue;
+
+      switch (sortBy) {
+        case 'cardName':
+          aValue = (a.name || a.cardName || '').toLowerCase();
+          bValue = (b.name || b.cardName || '').toLowerCase();
+          break;
+        case 'cardRarity':
+          aValue = parseInt(a.cardRarity) || 0;
+          bValue = parseInt(b.cardRarity) || 0;
+          break;
+        case 'cardRace':
+          aValue = (a.cardRace || '').toLowerCase();
+          bValue = (b.cardRace || '').toLowerCase();
+          break;
+        case 'dateAdded':
+        default:
+          aValue = new Date(a.dateAdded || 0).getTime();
+          bValue = new Date(b.dateAdded || 0).getTime();
+      }
+
+      // Apply sort order
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  }
+
+  // Toggle sort order when clicking the same sort field
+  const handleSortClick = (field) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  }
+
+  // Get the sorted and filtered cards
+  const sortedCards = getSortedCards()
+
+  // Get sort icon
+  const getSortIcon = () => {
+    return sortOrder === 'asc' ? <SortAsc size={16} /> : <SortDesc size={16} />
+  }
+
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">Future Cards</h1>
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Future Cards</h1>
 
       {error && (
-        <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+        <div className="bg-red-100 text-red-700 p-3 rounded-md">
           {error}
         </div>
       )}
 
       <AddFutureForm onAddCard={handleAddCard} />
 
-      <div className="mt-8">
+      {!loading && futureCards.length > 0 && (
+        <Card className="p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 gap-1">
+                    <Filter size={16} />
+                    Sort & Filter
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-52">
+                  <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem
+                      onClick={() => handleSortClick('dateAdded')}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <Calendar size={16} />
+                      Date Added
+                      {sortBy === 'dateAdded' && getSortIcon()}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleSortClick('cardName')}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <span>Name</span>
+                      {sortBy === 'cardName' && getSortIcon()}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleSortClick('cardRarity')}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <span>Rarity</span>
+                      {sortBy === 'cardRarity' && getSortIcon()}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => handleSortClick('cardRace')}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <span>Race</span>
+                      {sortBy === 'cardRace' && getSortIcon()}
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel>Filter</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="gap-2 cursor-pointer" onClick={() => setFilterFavorites(!filterFavorites)}>
+                    <div className="flex items-center gap-2">
+                      <Checkbox
+                        id="favorites"
+                        checked={filterFavorites}
+                        onCheckedChange={() => setFilterFavorites(!filterFavorites)}
+                      />
+                      <label htmlFor="favorites" className="cursor-pointer text-sm">
+                        Favorites only
+                      </label>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              <div className="text-sm text-muted-foreground">
+                Showing {sortedCards.length} cards
+                {filterFavorites ? " (favorites only)" : ""}
+              </div>
+            </div>
+
+            <Tabs defaultValue="grid" className="w-[160px]">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="grid">Grid</TabsTrigger>
+                <TabsTrigger value="list">List</TabsTrigger>
+              </TabsList>
+              <TabsContent value="grid" className="hidden">Grid View</TabsContent>
+              <TabsContent value="list" className="hidden">List View</TabsContent>
+            </Tabs>
+          </div>
+        </Card>
+      )}
+
+      <div>
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <Loader2 className="h-8 w-8 text-primary animate-spin" />
           </div>
         ) : futureCards.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">No future cards added yet. Add some above!</p>
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">No future cards added yet. Add some above!</p>
+          </Card>
+        ) : sortedCards.length === 0 ? (
+          <Card className="p-6 text-center">
+            <p className="text-muted-foreground">No favorites found. Add some cards to favorites!</p>
+          </Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {futureCards.map(card => (
+            {sortedCards.map(card => (
               <FutureCard
                 key={card.id}
                 card={card}
                 onDelete={handleDeleteCard}
                 onMoveToWatchlist={handleMoveToWatchlist}
+                onToggleFavorite={handleToggleFavorite}
               />
             ))}
           </div>
