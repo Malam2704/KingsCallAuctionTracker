@@ -23,9 +23,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="app">
+        <div className="app w-full">
           <Navbar />
-          <div className="container mx-auto px-4 py-8">
+          <div className="w-full px-4 py-8">
             <Routes>
               <Route
                 path="/"

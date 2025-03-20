@@ -42,8 +42,8 @@ function Login() {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-10">
-      <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="w-full max-w-md mx-auto mt-10">
+      <div className="bg-white rounded-lg shadow-md p-6 w-full">
         <h1 className="text-2xl font-bold mb-6 text-center">Login</h1>
 
         {error && (
