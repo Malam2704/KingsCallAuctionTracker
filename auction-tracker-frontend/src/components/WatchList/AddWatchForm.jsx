@@ -1,109 +1,256 @@
-import { useState } from 'react'
+import { useState } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Star, Plus, X } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 function AddWatchForm({ onAddWatch }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [newItem, setNewItem] = useState({
     cardName: '',
+    cardRace: 'Human',
+    cardRarity: '1',
     timeLeft: '',
-    hasBids: false
-  })
-  
-  const [isFormOpen, setIsFormOpen] = useState(false)
+    seller: '',
+    goldAmount: '',
+    hasBids: false,
+    description: ''
+  });
 
+  // Card race options
+  const raceOptions = [
+    'Human',
+    'Elf',
+    'Halfblood',
+    'Goblin',
+    'Ogre',
+    'Beast',
+    'Outsider/Planes',
+    'Angel/Celestial',
+    'Dragons',
+    'Demons',
+    'Undead',
+    'Special',
+    'Skills'
+  ];
+
+  // Handle text/number input changes
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target
+    const { name, value, type, checked } = e.target;
     setNewItem({
       ...newItem,
       [name]: type === 'checkbox' ? checked : value
-    })
-  }
+    });
+  };
+
+  // Handle select changes
+  const handleSelectChange = (name, value) => {
+    setNewItem({
+      ...newItem,
+      [name]: value
+    });
+  };
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    onAddWatch(newItem)
-    setNewItem({
-      cardName: '',
-      timeLeft: '',
-      hasBids: false
-    })
-    setIsFormOpen(false)
-  }
+    e.preventDefault();
+    if (newItem.cardName.trim()) {
+      onAddWatch(newItem);
+      setNewItem({
+        cardName: '',
+        cardRace: 'Human',
+        cardRarity: '1',
+        timeLeft: '',
+        seller: '',
+        goldAmount: '',
+        hasBids: false,
+        description: ''
+      });
+      setIsOpen(false);
+    }
+  };
+
+  // Function to render stars based on rarity
+  const renderStars = (count) => {
+    const rarity = parseInt(count);
+    const colors = {
+      1: 'text-gray-400',
+      2: 'text-green-400',
+      3: 'text-blue-400',
+      4: 'text-purple-400',
+      5: 'text-yellow-400',
+      6: 'text-amber-500',
+      7: 'text-red-500'
+    };
+
+    return (
+      <div className="flex">
+        {Array.from({ length: rarity }).map((_, i) => (
+          <Star key={i} size={16} className={`${colors[rarity]} fill-current`} />
+        ))}
+      </div>
+    );
+  };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-      {isFormOpen ? (
-        <div className="p-4">
-          <h2 className="text-lg font-semibold mb-4">Add to Watchlist</h2>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Card Name*</label>
-                <input
-                  type="text"
-                  name="cardName"
-                  value={newItem.cardName}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  required
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-1">Hours Left</label>
-                <input
-                  type="number"
-                  name="timeLeft"
-                  step="0.01"
-                  value={newItem.timeLeft}
-                  onChange={handleChange}
-                  className="w-full p-2 border rounded"
-                  min="0"
-                />
-              </div>
-            </div>
-            
-            <div className="mb-4">
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  name="hasBids"
-                  checked={newItem.hasBids}
-                  onChange={handleChange}
-                  className="mr-2"
-                />
-                <span>Has Bids</span>
-              </label>
-            </div>
-            
-            <div className="flex justify-end space-x-2">
-              <button
-                type="button"
-                onClick={() => setIsFormOpen(false)}
-                className="px-4 py-2 bg-gray-200 rounded"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded"
-              >
-                Add to Watchlist
-              </button>
-            </div>
-          </form>
-        </div>
-      ) : (
-        <button
-          onClick={() => setIsFormOpen(true)}
-          className="w-full p-4 text-center text-blue-500 hover:text-blue-700 flex items-center justify-center"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button className="gap-2">
+          <Plus size={16} />
           Add to Watchlist
-        </button>
-      )}
-    </div>
-  )
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add to Watchlist</DialogTitle>
+          <DialogDescription>
+            Add a card you want to keep an eye on in the auction house.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="cardName">Card Name*</Label>
+            <Input
+              id="cardName"
+              name="cardName"
+              value={newItem.cardName}
+              onChange={handleChange}
+              placeholder="Enter card name"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cardRace">Card Race</Label>
+              <Select
+                value={newItem.cardRace}
+                onValueChange={(value) => handleSelectChange('cardRace', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select race" />
+                </SelectTrigger>
+                <SelectContent>
+                  {raceOptions.map(race => (
+                    <SelectItem key={race} value={race}>
+                      {race}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cardRarity">Rarity</Label>
+              <div className="flex items-center gap-2">
+                <Select
+                  value={newItem.cardRarity}
+                  onValueChange={(value) => handleSelectChange('cardRarity', value)}
+                >
+                  <SelectTrigger className="w-24">
+                    <SelectValue placeholder="Stars" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6, 7].map(num => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <div>
+                  {renderStars(newItem.cardRarity)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="timeLeft">Hours Left*</Label>
+              <Input
+                id="timeLeft"
+                name="timeLeft"
+                type="number"
+                step="0.1"
+                min="0"
+                value={newItem.timeLeft}
+                onChange={handleChange}
+                placeholder="Hours remaining"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="goldAmount">Gold Amount</Label>
+              <Input
+                id="goldAmount"
+                name="goldAmount"
+                type="number"
+                min="0"
+                value={newItem.goldAmount}
+                onChange={handleChange}
+                placeholder="Current price"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="seller">Seller</Label>
+            <Input
+              id="seller"
+              name="seller"
+              value={newItem.seller}
+              onChange={handleChange}
+              placeholder="Seller name"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Description/Abilities</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={newItem.description}
+              onChange={handleChange}
+              placeholder="Card abilities or effects..."
+              className="h-20 resize-none"
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="hasBids"
+              checked={newItem.hasBids}
+              onCheckedChange={(checked) => handleSelectChange('hasBids', checked)}
+            />
+            <Label htmlFor="hasBids" className="cursor-pointer">Has bids already</Label>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">Add to Watchlist</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 }
 
-export default AddWatchForm
+export default AddWatchForm;
