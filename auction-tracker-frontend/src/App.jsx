@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import CurrentBidsList from './components/CurrentBids/CurrentBidsList'
 import WatchList from './components/Watchlist/WatchList'
 import FutureCardsList from './components/FutureCards/FutureCardsList'
 import Login from './components/Auth/Login'
@@ -31,7 +30,7 @@ function App() {
                 path="/"
                 element={
                   <ProtectedRoute>
-                    <CurrentBidsList />
+                    <WatchList />
                   </ProtectedRoute>
                 }
               />
