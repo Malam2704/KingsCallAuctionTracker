@@ -67,7 +67,20 @@ function AddWatchForm({ onAddWatch }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (newItem.cardName.trim()) {
-      onAddWatch(newItem);
+      // Calculate auction end timestamp based on current time + hours left
+      const hoursLeft = parseFloat(newItem.timeLeft) || 0;
+      const auctionEndTime = new Date(
+        new Date().getTime() + hoursLeft * 60 * 60 * 1000
+      ).toISOString();
+
+      // Create item with end timestamp instead of just hours left
+      const itemWithTimestamp = {
+        ...newItem,
+        auctionEndTime: auctionEndTime,
+        auctionDuration: newItem.timeLeft // Store original duration for reference
+      };
+
+      onAddWatch(itemWithTimestamp);
       setNewItem({
         cardName: '',
         cardRace: 'Human',

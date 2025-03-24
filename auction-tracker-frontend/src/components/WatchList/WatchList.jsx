@@ -20,6 +20,7 @@ function WatchList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("timeLeft");
   const [filterHasBids, setFilterHasBids] = useState(false);
+  const [hideEndedAuctions, setHideEndedAuctions] = useState(true);
 
   // Load watchlist from Firestore
   useEffect(() => {
@@ -55,23 +56,6 @@ function WatchList() {
 
     saveToFirestore();
   }, [watchItems, currentUser, loading]);
-
-  // Timer to update time left
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setWatchItems(items => items.map(item => {
-        if (item.timeLeft) {
-          const hoursLeft = parseFloat(item.timeLeft);
-          if (!isNaN(hoursLeft) && hoursLeft > 0) {
-            return { ...item, timeLeft: (hoursLeft - 1 / 60).toFixed(2) };
-          }
-        }
-        return item;
-      }));
-    }, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Handle adding a new watchlist item
   const handleAddWatch = (e) => {
@@ -163,6 +147,26 @@ function WatchList() {
     }
   };
 
+  // Helper function to calculate time remaining for an item
+  const calculateTimeRemaining = (item) => {
+    if (!item.auctionEndTime) {
+      // Fall back to the old method if no end timestamp
+      return parseFloat(item.timeLeft) || 0;
+    }
+
+    const now = new Date();
+    const endTime = new Date(item.auctionEndTime);
+    const diffMs = endTime - now;
+    const diffHours = diffMs / (1000 * 60 * 60);
+
+    return Math.max(0, diffHours);
+  };
+
+  // Function to check if an auction has ended
+  const isAuctionEnded = (item) => {
+    return calculateTimeRemaining(item) === 0;
+  };
+
   // Filter and sort watchlist items
   const getFilteredAndSortedItems = () => {
     return watchItems
@@ -173,13 +177,16 @@ function WatchList() {
         // Apply has bids filter
         const matchesHasBids = !filterHasBids || item.hasBids;
 
-        return matchesSearch && matchesHasBids;
+        // Apply hide ended auctions filter
+        const matchesEnded = !hideEndedAuctions || !isAuctionEnded(item);
+
+        return matchesSearch && matchesHasBids && matchesEnded;
       })
       .sort((a, b) => {
         // Sort by selected field
         switch (sortBy) {
           case 'timeLeft':
-            return (parseFloat(a.timeLeft) || Infinity) - (parseFloat(b.timeLeft) || Infinity);
+            return calculateTimeRemaining(a) - calculateTimeRemaining(b);
           case 'cardName':
             return a.cardName.localeCompare(b.cardName);
           case 'cardRarity':
@@ -249,6 +256,17 @@ function WatchList() {
               />
               <Label htmlFor="filterHasBids" className="cursor-pointer text-sm">
                 Show only cards with bids
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="hideEndedAuctions"
+                checked={hideEndedAuctions}
+                onCheckedChange={setHideEndedAuctions}
+              />
+              <Label htmlFor="hideEndedAuctions" className="cursor-pointer text-sm">
+                Hide ended auctions
               </Label>
             </div>
           </div>
