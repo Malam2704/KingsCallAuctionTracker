@@ -23,7 +23,6 @@ function Navbar() {
             <span className="text-sm text-gray-300">
               {currentUser?.email}
             </span>
-            <Link to="/" className="hover:text-blue-300">Current Bids</Link>
             <Link to="/watchlist" className="hover:text-blue-300">Watchlist</Link>
             <Link to="/future-cards" className="hover:text-blue-300">Future Cards</Link>
             <button
