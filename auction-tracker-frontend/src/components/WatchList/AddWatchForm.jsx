@@ -27,6 +27,7 @@ function AddWatchForm({ onAddWatch }) {
     seller: '',
     goldAmount: '',
     hasBids: false,
+    activelyBidding: false,
     description: ''
   });
 
@@ -89,6 +90,7 @@ function AddWatchForm({ onAddWatch }) {
         seller: '',
         goldAmount: '',
         hasBids: false,
+        activelyBidding: false,
         description: ''
       });
       setIsOpen(false);

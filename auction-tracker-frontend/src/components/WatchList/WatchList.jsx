@@ -20,6 +20,7 @@ function WatchList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("timeLeft");
   const [filterHasBids, setFilterHasBids] = useState(false);
+  const [filterActiveBids, setFilterActiveBids] = useState(false);
   const [hideEndedAuctions, setHideEndedAuctions] = useState(true);
 
   // Load watchlist from Firestore
@@ -241,6 +242,7 @@ function WatchList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="timeLeft">Time Left (Ending Soon)</SelectItem>
+                  <SelectItem value="activelyBidding">My Bids First</SelectItem>
                   <SelectItem value="cardName">Card Name</SelectItem>
                   <SelectItem value="cardRarity">Rarity (Highest)</SelectItem>
                   <SelectItem value="goldAmount">Price (Highest)</SelectItem>

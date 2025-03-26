@@ -65,6 +65,23 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
     return colorMap[race] || 'border-gray-500';
   };
 
+  // Get badge color for race
+  const getRaceBadgeColor = (race) => {
+    const color = raceColorMap[race] || 'gray';
+    return `bg-${color}-100 text-${color}-800 border-${color}-300`;
+  };
+
+  // Handle bidding checkbox change
+  const handleBiddingChange = (checked) => {
+    onUpdate({
+      ...item,
+      activelyBidding: checked
+    });
+  };
+
+  // Safely get card race (with fallback)
+  const cardRace = item.cardRace || 'Human';
+
   // Calculate time left based on end timestamp
   const calculateTimeRemaining = () => {
     if (!item.auctionEndTime) {
@@ -122,7 +139,7 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
     return "bg-green-500"; // More than 4 hours
   };
 
-  // Render stars based on rarity
+  // Function to render stars based on rarity
   const renderStars = (count) => {
     if (!count || isNaN(parseInt(count))) return null;
 
@@ -140,17 +157,32 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
     return (
       <div className="flex">
         {Array.from({ length: rarity }).map((_, i) => (
-          <Star key={i} size={14} className={`${colors[rarity]} fill-current`} />
+          <Star key={i} size={16} className={`${colors[rarity]} fill-current`} />
         ))}
       </div>
     );
   };
 
   return (
-    <Card className="overflow-hidden flex flex-col h-full border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-      <CardHeader className="p-4 pb-2">
-        <div className="flex justify-between items-start">
-          <CardTitle className="text-base font-bold truncate">{item.cardName}</CardTitle>
+    <Card className={`overflow-hidden flex flex-col h-full border-2 ${getRaceBorderColor(cardRace)} ${getRaceBackgroundColor(cardRace)} hover:shadow-md transition-shadow`}>
+      <CardHeader className="p-4 pb-2 flex flex-col items-center">
+        {/* Rarity Stars at the top, prominently displayed */}
+        <div className="mb-2 bg-white/80 px-3 py-1 rounded-full shadow-sm">
+          {item.cardRarity && renderStars(item.cardRarity)}
+        </div>
+
+        {/* Card Name centered below the stars */}
+        <CardTitle className="text-center text-lg font-bold">{item.cardName}</CardTitle>
+
+        {/* Race as a badge */}
+        {cardRace && (
+          <Badge variant="outline" className={`mt-1 ${getRaceBadgeColor(cardRace)}`}>
+            {cardRace}
+          </Badge>
+        )}
+
+        {/* Options dropdown menu */}
+        <div className="absolute top-2 right-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">
@@ -168,15 +200,6 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 mt-1">
-          {item.cardRace && (
-            <Badge variant="outline" className={getRaceBadgeColor(item.cardRace)}>
-              {item.cardRace}
-            </Badge>
-          )}
-          {item.cardRarity && renderStars(item.cardRarity)}
         </div>
       </CardHeader>
 
