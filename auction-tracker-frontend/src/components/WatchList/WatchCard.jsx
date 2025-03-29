@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Clock, User, Coins, Star, Eye, ShoppingCart, MoreVertical } from "lucide-react";
+import { Clock, User, Coins, Star, Trash2, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
+function WatchCard({ item, onUpdate, onDelete }) {
   // Race options with colors
   const raceColorMap = {
     'Human': 'blue',
     'Elf': 'green',
     'Halfblood': 'purple',
-    'Goblin': 'red',
+    'Goblin': 'slate',
     'Ogre': 'amber',
     'Beast': 'orange',
     'Outsider/Planes': 'indigo',
@@ -31,9 +31,9 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
       'Human': 'bg-blue-50',
       'Elf': 'bg-green-50',
       'Halfblood': 'bg-purple-50',
-      'Goblin': 'bg-red-50',
-      'Ogre': 'bg-amber-50',
-      'Beast': 'bg-orange-50',
+      'Goblin': 'bg-neutral-300',
+      'Ogre': 'bg-stone-400',
+      'Beast': 'bg-orange-100',
       'Outsider/Planes': 'bg-indigo-50',
       'Angel/Celestial': 'bg-sky-50',
       'Dragons': 'bg-yellow-50',
@@ -50,10 +50,10 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
     const colorMap = {
       'Human': 'border-blue-500',
       'Elf': 'border-green-500',
-      'Halfblood': 'border-purple-500',
-      'Goblin': 'border-red-500',
-      'Ogre': 'border-amber-500',
-      'Beast': 'border-orange-500',
+      'Halfblood': 'border-yellow-500',
+      'Goblin': 'border-slate-500',
+      'Ogre': 'border-zinc-700',
+      'Beast': 'border-amber-950',
       'Outsider/Planes': 'border-indigo-500',
       'Angel/Celestial': 'border-sky-500',
       'Dragons': 'border-yellow-500',
@@ -190,12 +190,8 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onMoveToBids(item)}>
-                <ShoppingCart size={14} className="mr-2" />
-                Bid on Card
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDelete(item.id)} className="text-red-500">
-                <Eye size={14} className="mr-2" />
+                <Trash2 size={14} className="mr-2" />
                 Remove from Watchlist
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -238,10 +234,10 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
             <div className="w-full">
               <div className="flex justify-between items-center mb-1">
                 <span className={`text-xs font-medium ${isAuctionEnded
-                    ? "text-gray-500"
-                    : timeRemaining <= 1
-                      ? "text-red-500"
-                      : "text-gray-700"
+                  ? "text-gray-500"
+                  : timeRemaining <= 1
+                    ? "text-red-500"
+                    : "text-gray-700"
                   }`}>
                   {formatTimeRemaining(timeRemaining)}
                 </span>
@@ -263,14 +259,11 @@ function WatchCard({ item, onUpdate, onDelete, onMoveToBids }) {
       </CardContent>
 
       <CardFooter className="p-3 pt-0 flex-shrink-0">
-        <Button
-          className="w-full text-sm h-8"
-          variant={isAuctionEnded ? "outline" : item.activelyBidding ? "secondary" : "default"}
-          onClick={() => onMoveToBids(item)}
-          disabled={isAuctionEnded}
-        >
-          {isAuctionEnded ? "Auction Ended" : item.activelyBidding ? "Update Bid" : "Place Bid"}
-        </Button>
+        {item.activelyBidding && (
+          <Badge className="w-full py-2 flex justify-center items-center bg-blue-500 hover:bg-blue-600">
+            Currently Bidding
+          </Badge>
+        )}
       </CardFooter>
     </Card>
   );

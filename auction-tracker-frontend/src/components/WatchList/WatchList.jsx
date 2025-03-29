@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react';
 import WatchCard from './WatchCard';
 import AddWatchForm from './AddWatchForm';
 import { useAuth } from '../../context/AuthContext';
-import { getUserData, saveWatchlist, saveBids } from '../../services/firebase';
-import { Button } from "@/components/ui/button";
+import { getUserData, saveWatchlist } from '../../services/firebase';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Search, Clock, Filter, Loader2 } from 'lucide-react';
+import { Search, Clock, Loader2 } from 'lucide-react';
 
 function WatchList() {
   const [watchItems, setWatchItems] = useState([]);
@@ -58,48 +57,7 @@ function WatchList() {
     saveToFirestore();
   }, [watchItems, currentUser, loading]);
 
-  // Handle adding a new watchlist item
-  const handleAddWatch = (e) => {
-    e?.preventDefault();
-
-    if (!newItem.cardName.trim()) return;
-
-    const itemWithId = {
-      ...newItem,
-      id: Date.now().toString()
-    };
-
-    setWatchItems([...watchItems, itemWithId]);
-    setNewItem({
-      cardName: '',
-      cardRace: 'Human',
-      cardRarity: '1',
-      timeLeft: '',
-      seller: '',
-      goldAmount: '',
-      hasBids: false,
-      description: ''
-    });
-  };
-
-  // Handle text/number input changes in add form
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setNewItem({
-      ...newItem,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  // Handle select changes in add form
-  const handleSelectChange = (name, value) => {
-    setNewItem({
-      ...newItem,
-      [name]: value
-    });
-  };
-
-  // Handle updating a watchlist item
+  // Handle updating a watchlist item (like toggling activelyBidding)
   const handleUpdateWatch = (updatedItem) => {
     setWatchItems(watchItems.map(item =>
       item.id === updatedItem.id ? updatedItem : item
@@ -109,43 +67,6 @@ function WatchList() {
   // Handle deleting a watchlist item
   const handleDeleteWatch = (itemId) => {
     setWatchItems(watchItems.filter(item => item.id !== itemId));
-  };
-
-  // Move an item from watchlist to current bids
-  const handleMoveToBids = async (item) => {
-    try {
-      // Get current bids from Firestore
-      const userData = await getUserData(currentUser.uid);
-      const currentBids = userData.currentBids || [];
-
-      // Create a new bid from the watchlist item
-      const newBid = {
-        id: Date.now().toString(),
-        cardName: item.cardName,
-        bidTime: new Date().toISOString(),
-        timeLeft: item.timeLeft,
-        seller: item.seller || '',
-        goldAmount: item.goldAmount || '',
-        outbid: false,
-        planToRebid: false,
-        cardRace: item.cardRace,
-        cardRarity: item.cardRarity,
-        description: item.description
-      };
-
-      // Add to bids list and save
-      const updatedBids = [...currentBids, newBid];
-      await saveBids(currentUser.uid, updatedBids);
-
-      // Remove from watchlist
-      handleDeleteWatch(item.id);
-
-      // Provide user feedback
-      alert(`"${item.cardName}" moved to Current Bids!`);
-    } catch (err) {
-      console.error("Error moving item to bids:", err);
-      setError("Failed to move card to bids list. Please try again.");
-    }
   };
 
   // Helper function to calculate time remaining for an item
@@ -178,14 +99,20 @@ function WatchList() {
         // Apply has bids filter
         const matchesHasBids = !filterHasBids || item.hasBids;
 
+        // Apply active bids filter
+        const matchesActiveBids = !filterActiveBids || item.activelyBidding;
+
         // Apply hide ended auctions filter
         const matchesEnded = !hideEndedAuctions || !isAuctionEnded(item);
 
-        return matchesSearch && matchesHasBids && matchesEnded;
+        return matchesSearch && matchesHasBids && matchesActiveBids && matchesEnded;
       })
       .sort((a, b) => {
         // Sort by selected field
         switch (sortBy) {
+          case 'activelyBidding':
+            // Sort by actively bidding (true first)
+            return (b.activelyBidding || false) - (a.activelyBidding || false);
           case 'timeLeft':
             return calculateTimeRemaining(a) - calculateTimeRemaining(b);
           case 'cardName':
@@ -263,6 +190,17 @@ function WatchList() {
 
             <div className="flex items-center space-x-2">
               <Checkbox
+                id="filterActiveBids"
+                checked={filterActiveBids}
+                onCheckedChange={setFilterActiveBids}
+              />
+              <Label htmlFor="filterActiveBids" className="cursor-pointer text-sm">
+                Show only my active bids
+              </Label>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
                 id="hideEndedAuctions"
                 checked={hideEndedAuctions}
                 onCheckedChange={setHideEndedAuctions}
@@ -302,7 +240,6 @@ function WatchList() {
                 item={item}
                 onUpdate={handleUpdateWatch}
                 onDelete={handleDeleteWatch}
-                onMoveToBids={handleMoveToBids}
               />
             ))}
           </div>
