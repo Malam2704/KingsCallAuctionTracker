@@ -18,10 +18,10 @@ function WatchCard({ item, onUpdate, onDelete }) {
     'Beast': 'orange',
     'Outsider/Planes': 'indigo',
     'Angel/Celestial': 'sky',
-    'Dragons': 'yellow',
-    'Demons': 'rose',
+    'Dragons': 'red',
+    'Demons': 'purple',
     'Undead': 'emerald',
-    'Special': 'pink',
+    'Special': 'white',
     'Skills': 'gray'
   };
 
@@ -30,15 +30,15 @@ function WatchCard({ item, onUpdate, onDelete }) {
     const colorMap = {
       'Human': 'bg-blue-50',
       'Elf': 'bg-green-50',
-      'Halfblood': 'bg-purple-50',
+      'Halfblood': 'bg-yellow-50',
       'Goblin': 'bg-neutral-300',
       'Ogre': 'bg-stone-400',
       'Beast': 'bg-orange-100',
       'Outsider/Planes': 'bg-indigo-50',
-      'Angel/Celestial': 'bg-sky-50',
-      'Dragons': 'bg-yellow-50',
-      'Demons': 'bg-rose-50',
-      'Undead': 'bg-emerald-50',
+      'Angel/Celestial': 'bg-sky-200',
+      'Dragons': 'bg-red-400',
+      'Demons': 'bg-purple-400',
+      'Undead': 'bg-indigo-300',
       'Special': 'bg-pink-50',
       'Skills': 'bg-gray-50'
     };
@@ -55,10 +55,10 @@ function WatchCard({ item, onUpdate, onDelete }) {
       'Ogre': 'border-zinc-700',
       'Beast': 'border-amber-950',
       'Outsider/Planes': 'border-indigo-500',
-      'Angel/Celestial': 'border-sky-500',
-      'Dragons': 'border-yellow-500',
-      'Demons': 'border-rose-500',
-      'Undead': 'border-emerald-500',
+      'Angel/Celestial': 'border-sky-400',
+      'Dragons': 'border-red-950',
+      'Demons': 'border-purple-950',
+      'Undead': 'border-indigo-950',
       'Special': 'border-pink-500',
       'Skills': 'border-gray-500'
     };
