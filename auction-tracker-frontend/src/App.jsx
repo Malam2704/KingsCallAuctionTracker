@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
-import WatchList from './components/Watchlist/WatchList'
+import WatchList from './components/WatchList/WatchList'
 import FutureCardsList from './components/FutureCards/FutureCardsList'
 import Login from './components/Auth/Login'
 import Signup from './components/Auth/Signup'
