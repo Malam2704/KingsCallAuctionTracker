@@ -201,20 +201,6 @@ function WatchCard({ item, onUpdate, onDelete }) {
 
       <CardContent className="p-4 pt-1 flex-grow">
         <div className="space-y-2 text-sm">
-          <div className="flex items-center space-x-2 p-2 bg-white/40 rounded">
-            <Checkbox
-              id={`bidding-${item.id}`}
-              checked={item.activelyBidding || false}
-              onCheckedChange={handleBiddingChange}
-            />
-            <label
-              htmlFor={`bidding-${item.id}`}
-              className={`text-sm font-medium cursor-pointer ${item.activelyBidding ? 'text-blue-600' : 'text-gray-700'}`}
-            >
-              Currently Bidding
-            </label>
-          </div>
-
           {item.seller && (
             <div className="flex items-center gap-2">
               <User size={14} className="text-gray-500" />
@@ -249,6 +235,8 @@ function WatchCard({ item, onUpdate, onDelete }) {
               />
             </div>
           </div>
+
+
         </div>
 
         {item.description && (
@@ -256,15 +244,23 @@ function WatchCard({ item, onUpdate, onDelete }) {
             {item.description}
           </div>
         )}
-      </CardContent>
 
-      <CardFooter className="p-3 pt-0 flex-shrink-0">
-        {item.activelyBidding && (
-          <Badge className="w-full py-2 flex justify-center items-center bg-blue-500 hover:bg-blue-600">
-            Currently Bidding
-          </Badge>
-        )}
-      </CardFooter>
+        {/* Bidding status toggle at bottom of content */}
+        <div
+          className={`mt-3 py-2 px-3 rounded cursor-pointer flex items-center gap-2 transition-colors ${item.activelyBidding ? 'bg-blue-100' : 'bg-gray-100'
+            }`}
+          onClick={() => handleBiddingChange(!item.activelyBidding)}
+        >
+          <Checkbox
+            id={`bidding-${item.id}`}
+            checked={item.activelyBidding || false}
+            onCheckedChange={handleBiddingChange}
+          />
+          <span className={`text-sm ${item.activelyBidding ? 'text-blue-700 font-medium' : 'text-gray-600'}`}>
+            {item.activelyBidding ? 'Currently Bidding' : 'Click to Bid'}
+          </span>
+        </div>
+      </CardContent>
     </Card>
   );
 }
