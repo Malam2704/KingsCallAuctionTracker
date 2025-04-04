@@ -8,19 +8,19 @@ import { Clock, User, Coins, Star, Trash2, MoreVertical } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 function WatchCard({ item, onUpdate, onDelete }) {
-  // Race options with colors
+  // Race options with colors based on the provided icon image
   const raceColorMap = {
-    'Human': 'blue',
+    'Human': 'cyan',
     'Elf': 'green',
-    'Halfblood': 'purple',
+    'Halfblood': 'yellow',
     'Goblin': 'slate',
-    'Ogre': 'amber',
+    'Ogre': 'stone',
     'Beast': 'orange',
-    'Outsider/Planes': 'indigo',
+    'Outsider/Planes': 'violet',
     'Angel/Celestial': 'sky',
     'Dragons': 'red',
-    'Demons': 'purple',
-    'Undead': 'emerald',
+    'Demons': 'fuchsia',
+    'Undead': 'purple',
     'Special': 'white',
     'Skills': 'gray'
   };
@@ -28,37 +28,37 @@ function WatchCard({ item, onUpdate, onDelete }) {
   // Get background color for race
   const getRaceBackgroundColor = (race) => {
     const colorMap = {
-      'Human': 'bg-blue-50',
-      'Elf': 'bg-green-50',
-      'Halfblood': 'bg-yellow-50',
-      'Goblin': 'bg-neutral-300',
-      'Ogre': 'bg-stone-400',
+      'Human': 'bg-cyan-100',
+      'Elf': 'bg-green-100',
+      'Halfblood': 'bg-yellow-100',
+      'Goblin': 'bg-slate-200',
+      'Ogre': 'bg-stone-200',
       'Beast': 'bg-orange-100',
-      'Outsider/Planes': 'bg-indigo-50',
-      'Angel/Celestial': 'bg-sky-200',
-      'Dragons': 'bg-red-400',
-      'Demons': 'bg-purple-400',
-      'Undead': 'bg-indigo-300',
+      'Outsider/Planes': 'bg-violet-100',
+      'Angel/Celestial': 'bg-sky-100',
+      'Dragons': 'bg-red-100',
+      'Demons': 'bg-fuchsia-100',
+      'Undead': 'bg-purple-100',
       'Special': 'bg-pink-50',
-      'Skills': 'bg-gray-50'
+      'Skills': 'bg-gray-100'
     };
-    return colorMap[race] || 'bg-gray-50';
+    return colorMap[race] || 'bg-gray-100';
   };
 
   // Get border color for race
   const getRaceBorderColor = (race) => {
     const colorMap = {
-      'Human': 'border-blue-500',
-      'Elf': 'border-green-500',
+      'Human': 'border-cyan-500',
+      'Elf': 'border-green-600',
       'Halfblood': 'border-yellow-500',
       'Goblin': 'border-slate-500',
-      'Ogre': 'border-zinc-700',
-      'Beast': 'border-amber-950',
-      'Outsider/Planes': 'border-indigo-500',
+      'Ogre': 'border-stone-700',
+      'Beast': 'border-orange-500',
+      'Outsider/Planes': 'border-violet-600',
       'Angel/Celestial': 'border-sky-400',
-      'Dragons': 'border-red-950',
-      'Demons': 'border-purple-950',
-      'Undead': 'border-indigo-950',
+      'Dragons': 'border-red-600',
+      'Demons': 'border-fuchsia-700',
+      'Undead': 'border-purple-600',
       'Special': 'border-pink-500',
       'Skills': 'border-gray-500'
     };
@@ -68,6 +68,10 @@ function WatchCard({ item, onUpdate, onDelete }) {
   // Get badge color for race
   const getRaceBadgeColor = (race) => {
     const color = raceColorMap[race] || 'gray';
+    if (color === 'cyan') return 'bg-cyan-100 text-cyan-800 border-cyan-300';
+    if (color === 'fuchsia') return 'bg-fuchsia-100 text-fuchsia-800 border-fuchsia-300';
+    if (color === 'violet') return 'bg-violet-100 text-violet-800 border-violet-300';
+    if (color === 'stone') return 'bg-stone-100 text-stone-800 border-stone-300';
     return `bg-${color}-100 text-${color}-800 border-${color}-300`;
   };
 
@@ -149,9 +153,9 @@ function WatchCard({ item, onUpdate, onDelete }) {
       2: 'text-green-400',
       3: 'text-blue-400',
       4: 'text-purple-400',
-      5: 'text-yellow-400',
-      6: 'text-amber-500',
-      7: 'text-red-500'
+      5: 'text-amber-400',
+      6: 'text-red-500',
+      7: 'text-yellow-500'
     };
 
     return (
