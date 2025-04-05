@@ -15,6 +15,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { v4 as uuidv4 } from 'uuid'; // You'll need to install this package
+import { db, auth } from './firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 function AddWatchForm({ onAddWatch }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +67,7 @@ function AddWatchForm({ onAddWatch }) {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (newItem.cardName.trim()) {
       // Calculate auction end timestamp based on current time + hours left
@@ -76,23 +79,44 @@ function AddWatchForm({ onAddWatch }) {
       // Create item with end timestamp instead of just hours left
       const itemWithTimestamp = {
         ...newItem,
+        id: uuidv4(), // Generate a unique ID for the item
         auctionEndTime: auctionEndTime,
-        auctionDuration: newItem.timeLeft // Store original duration for reference
+        auctionDuration: newItem.timeLeft, // Store original duration for reference
+        createdAt: new Date().toISOString(),
+        userId: auth.currentUser.uid
       };
 
-      onAddWatch(itemWithTimestamp);
-      setNewItem({
-        cardName: '',
-        cardRace: 'Human',
-        cardRarity: '1',
-        timeLeft: '',
-        seller: '',
-        goldAmount: '',
-        hasBids: false,
-        activelyBidding: false,
-        description: ''
-      });
-      setIsOpen(false);
+      // Add to user's watchlist collection in Firestore
+      try {
+        const userId = auth.currentUser.uid;
+        const itemId = itemWithTimestamp.id;
+
+        // This will trigger the Cloud Function to schedule the notification
+        await setDoc(
+          doc(db, "users", userId, "watchlist", itemId),
+          itemWithTimestamp
+        );
+
+        // Also update the local state
+        onAddWatch(itemWithTimestamp);
+
+        // Reset form
+        setNewItem({
+          cardName: '',
+          cardRace: 'Human',
+          cardRarity: '1',
+          timeLeft: '',
+          seller: '',
+          goldAmount: '',
+          hasBids: false,
+          activelyBidding: false,
+          description: ''
+        });
+        setIsOpen(false);
+      } catch (error) {
+        console.error("Error adding to watchlist:", error);
+        // Show error to user
+      }
     }
   };
 
