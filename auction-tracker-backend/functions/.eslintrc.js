@@ -6,9 +6,14 @@ module.exports = {
   },
   extends: [
     "eslint:recommended",
-    "google",
   ],
   rules: {
-    quotes: ["error", "double"],
+    "no-restricted-globals": ["error", "name", "length"],
+    "prefer-arrow-callback": "off",
+    "arrow-parens": "off",
+    "no-unused-vars": "warn"
   },
+  parserOptions: {
+    "ecmaVersion": 2017
+  }
 };
