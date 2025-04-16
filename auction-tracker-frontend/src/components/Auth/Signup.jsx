@@ -41,7 +41,8 @@ function Signup() {
     try {
       setLoading(true)
       await registerUser(email, password)
-      navigate('/')
+      // Redirect to verification notice page instead of home
+      navigate('/verify-notice')
     } catch (error) {
       if (error.code === 'auth/email-already-in-use') {
         setError('This email is already registered')

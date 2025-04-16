@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
     const value = {
         currentUser,
         isAuthenticated: !!currentUser,
+        isEmailVerified: currentUser?.emailVerified || false,
     };
 
     return (

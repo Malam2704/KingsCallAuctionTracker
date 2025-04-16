@@ -3,6 +3,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs } from "firebase/firestore";
 import { getFunctions, httpsCallable } from "firebase/functions";
+import {
+    sendEmailVerification,
+    applyActionCode,
+    confirmPasswordReset,
+    verifyPasswordResetCode
+} from "firebase/auth";
 
 // Your web app's Firebase configuration
 // Replace these values with your own Firebase project config
@@ -25,16 +31,6 @@ const functions = getFunctions(app);
 
 // Export a function to call your Cloud Function directly (if needed)
 export const callAuctionEndFunction = httpsCallable(functions, 'yourFunctionName');
-
-// Authentication functions
-export const registerUser = async (email, password) => {
-    try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        return userCredential.user;
-    } catch (error) {
-        throw error;
-    }
-};
 
 export const loginUser = async (email, password) => {
     try {
@@ -102,6 +98,64 @@ export const getUserData = async (userId) => {
         }
     } catch (error) {
         console.error("Error getting user data: ", error);
+        throw error;
+    }
+};
+
+// Send verification email
+export const sendVerificationEmail = async (user) => {
+    try {
+        await sendEmailVerification(user);
+        return true;
+    } catch (error) {
+        console.error("Error sending verification email:", error);
+        throw error;
+    }
+};
+
+// Verify email with code
+export const verifyEmail = async (actionCode) => {
+    try {
+        await applyActionCode(auth, actionCode);
+        return true;
+    } catch (error) {
+        console.error("Error verifying email:", error);
+        throw error;
+    }
+};
+
+// Store user data in Firestore
+export const createUserDocument = async (user, additionalData = {}) => {
+    if (!user) return;
+
+    try {
+        await setDoc(doc(db, "users", user.uid), {
+            email: user.email,
+            emailVerified: user.emailVerified,
+            createdAt: new Date(),
+            ...additionalData
+        }, { merge: true });
+        return true;
+    } catch (error) {
+        console.error("Error creating user document:", error);
+        throw error;
+    }
+};
+
+// Update the registerUser function
+export const registerUser = async (email, password) => {
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+
+        // Send verification email
+        await sendVerificationEmail(user);
+
+        // Store minimal user data initially
+        await createUserDocument(user, { verificationPending: true });
+
+        return user;
+    } catch (error) {
         throw error;
     }
 };
