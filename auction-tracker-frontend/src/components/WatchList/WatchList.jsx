@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import WatchCard from './WatchCard';
-import AddWatchForm from './AddWatchForm';
+import AddWatchForm from './AddWatchFormWithImage';
 import { useAuth } from '../../context/AuthContext';
 import { getUserData, saveWatchlist } from '../../services/firebase';
 import { Card } from "@/components/ui/card";

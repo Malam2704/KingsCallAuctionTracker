@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, Plus } from "lucide-react";
+import { Star, Plus, Upload, X, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +16,13 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-function AddWatchForm({ onAddWatch }) {
+function AddWatchFormWithImage({ onAddWatch }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const fileInputRef = useRef(null);
+
   const [newItem, setNewItem] = useState({
     cardName: '',
     cardRace: 'Human',
@@ -30,24 +35,111 @@ function AddWatchForm({ onAddWatch }) {
     description: ''
   });
 
-  // Card race options
   const raceOptions = [
-    'Human',
-    'Elf',
-    'Halfblood',
-    'Goblin',
-    'Ogre',
-    'Beast',
-    'Outsider/Planes',
-    'Angel/Celestial',
-    'Dragons',
-    'Demons',
-    'Undead',
-    'Special',
-    'Skills'
+    'Human', 'Elf', 'Halfblood', 'Goblin', 'Ogre', 'Beast',
+    'Outsider/Planes', 'Angel/Celestial', 'Dragons', 'Demons', 'Undead', 'Special', 'Skills'
   ];
 
-  // Handle text/number input changes
+  // Simple OCR parsing function for auction screenshots
+  const parseAuctionImage = async (imageFile) => {
+    try {
+      // Try to use Tesseract.js if available
+      const Tesseract = await import('tesseract.js');
+
+      const { data: { text } } = await Tesseract.recognize(imageFile, 'eng');
+
+      // Parse the text for auction data
+      const result = {};
+
+      // Look for card names (common patterns from your screenshots)
+      const cardNameMatch = text.match(/(Coral Blue|Archangel Israp|ARK Sniper|Prime Valkyrie|Santoryu|Chariot Reversed|Queen Reversed|Strength Reversed|Xihai Lunu|Garden Guard|[A-Za-z\s]{3,25})/i);
+      if (cardNameMatch) {
+        result.cardName = cardNameMatch[1].trim();
+      }
+
+      // Look for time (format: "4Hours", "20Hours", etc.)
+      const timeMatch = text.match(/(\d+)\s*Hours?/i);
+      if (timeMatch) {
+        result.timeLeft = timeMatch[1];
+      }
+
+      // Look for gold amount (number before "Max.")
+      const goldMatch = text.match(/(\d+)\s*(?=Max\.?)/i);
+      if (goldMatch) {
+        result.goldAmount = goldMatch[1];
+      }
+
+      // Look for seller names (between time and bidder)
+      const sellerMatch = text.match(/Hours?\s+([A-Za-z0-9]{3,15})/i);
+      if (sellerMatch) {
+        result.seller = sellerMatch[1];
+      }
+
+      return result;
+    } catch (error) {
+      console.warn('OCR not available or failed:', error);
+      return {}; // Return empty object if OCR fails
+    }
+  };
+
+  const handleDrag = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleImageFile = async (file) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file');
+      return;
+    }
+
+    setIsProcessing(true);
+    setUploadedImage(URL.createObjectURL(file));
+
+    try {
+      const extractedData = await parseAuctionImage(file);
+
+      // Update form fields with extracted data
+      setNewItem(prev => ({
+        ...prev,
+        ...extractedData
+      }));
+
+    } catch (error) {
+      console.error('Error processing image:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleFileInput = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      handleImageFile(e.target.files[0]);
+    }
+  };
+
+  const clearImage = () => {
+    setUploadedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setNewItem({
@@ -56,7 +148,6 @@ function AddWatchForm({ onAddWatch }) {
     });
   };
 
-  // Handle select changes
   const handleSelectChange = (name, value) => {
     setNewItem({
       ...newItem,
@@ -64,23 +155,22 @@ function AddWatchForm({ onAddWatch }) {
     });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = () => {
     if (newItem.cardName.trim()) {
-      // Calculate auction end timestamp based on current time + hours left
       const hoursLeft = parseFloat(newItem.timeLeft) || 0;
       const auctionEndTime = new Date(
         new Date().getTime() + hoursLeft * 60 * 60 * 1000
       ).toISOString();
 
-      // Create item with end timestamp instead of just hours left
       const itemWithTimestamp = {
         ...newItem,
         auctionEndTime: auctionEndTime,
-        auctionDuration: newItem.timeLeft // Store original duration for reference
+        auctionDuration: newItem.timeLeft
       };
 
       onAddWatch(itemWithTimestamp);
+
+      // Reset form
       setNewItem({
         cardName: '',
         cardRace: 'Human',
@@ -92,11 +182,11 @@ function AddWatchForm({ onAddWatch }) {
         activelyBidding: false,
         description: ''
       });
+      setUploadedImage(null);
       setIsOpen(false);
     }
   };
 
-  // Function to render stars based on rarity
   const renderStars = (count) => {
     const rarity = parseInt(count);
     const colors = {
@@ -126,15 +216,74 @@ function AddWatchForm({ onAddWatch }) {
           Add to Watchlist
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add to Watchlist</DialogTitle>
           <DialogDescription>
-            Add a card you want to keep an eye on in the auction house.
+            Drop a screenshot below to auto-fill, or enter details manually.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <div className="space-y-4 py-4">
+          {/* Image Drop Zone */}
+          <div
+            className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors ${dragActive ? 'border-primary bg-primary/10' : 'border-gray-300'
+              }`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            {uploadedImage ? (
+              <div className="space-y-2">
+                <img
+                  src={uploadedImage}
+                  alt="Uploaded screenshot"
+                  className="max-w-full max-h-32 mx-auto rounded"
+                />
+                <div className="flex items-center justify-center gap-2">
+                  {isProcessing && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600">
+                      <Loader2 size={16} className="animate-spin" />
+                      Processing...
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={clearImage}
+                  >
+                    <X size={16} className="mr-1" />
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                <p className="text-sm">Drop auction screenshot here</p>
+                <p className="text-xs text-gray-500">or</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  Choose File
+                </Button>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileInput}
+                  className="hidden"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Manual Form Fields */}
           <div className="space-y-2">
             <Label htmlFor="cardName">Card Name*</Label>
             <Input
@@ -185,7 +334,6 @@ function AddWatchForm({ onAddWatch }) {
                     ))}
                   </SelectContent>
                 </Select>
-
                 <div>
                   {renderStars(newItem.cardRarity)}
                 </div>
@@ -254,17 +402,17 @@ function AddWatchForm({ onAddWatch }) {
             />
             <Label htmlFor="hasBids" className="cursor-pointer">Has bids already</Label>
           </div>
+        </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit">Add to Watchlist</Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>Add to Watchlist</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
 
-export default AddWatchForm;
+export default AddWatchFormWithImage;
